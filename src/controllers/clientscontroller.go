@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	model "models"
 	"net/http"
 	"strconv"
@@ -93,7 +92,7 @@ func FetchClientHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			log.Printf("Error: %v", err)
+			// log.Printf("Error: %v", err)
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}

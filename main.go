@@ -3,6 +3,7 @@ package main
 import (
 	"controllers"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/codegangsta/negroni"
@@ -65,5 +66,6 @@ func main() {
 	}).Handler(mux)
 
 	fmt.Println("Listening on port 1147")
-	http.ListenAndServe(":1147", corsHandler)
+	err := http.ListenAndServe(":1147", corsHandler)
+	log.Printf("Server Error : %#v\n", err)
 }

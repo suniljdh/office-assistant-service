@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	model "models"
 	"net/http"
 	"utilities"
@@ -104,7 +103,7 @@ func SaveUserHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 	fatal(err)
 
-	var mu model.User
+	var mu model.UserInfo
 	// log.Printf("Request Json: %v\n", r.Body)
 	err = json.NewDecoder(r.Body).Decode(&mu)
 	defer r.Body.Close()
@@ -113,7 +112,7 @@ func SaveUserHandler(w http.ResponseWriter, r *http.Request) {
 	row := mu.SaveUser(db)
 
 	if row != nil {
-		log.Printf("ROW : %#+v", row)
+		// log.Printf("ROW : %#+v", row)
 		var resp struct {
 			Context    string `json:"context"`
 			ReturnCode string `json:"returncode"`

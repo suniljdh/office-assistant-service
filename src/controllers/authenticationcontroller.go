@@ -9,7 +9,6 @@ import (
 	"log"
 	model "models"
 	"net/http"
-	"strings"
 	"time"
 	"utilities"
 
@@ -61,47 +60,51 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := dbutil.ConnectDB()
 	fatal(err)
-	var u model.UserCredentials
 
-	err = json.NewDecoder(r.Body).Decode(&u)
-	// u.UserName = r.FormValue("username")
-	// u.Password = r.FormValue("password")
-	// log.Printf("UserName: %s\nPassword: %s", &u.UserName, &u.Password)
-	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprint(w, "Error in Request")
+	var u model.UserInfo
+
+	if err = json.NewDecoder(r.Body).Decode(&u); err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	//defer db.Close()
-	// err = db.Ping()
-	// if err != nil {
-	// 	log.Printf("From Ping() Attempt: %s" + err.Error())
-	// }
 
-	fatal(err)
-	row := model.Authorize(db, u)
+	defer db.Close()
 
-	var userData model.UserCredentials
+	if err := db.Ping(); err != nil {
+		log.Printf("From Ping() Attempt: %s" + err.Error())
+		fatal(err)
+	}
+	plainPassword := u.Password
 
-	row.Scan(&userData.UserName, &userData.Password, &userData.DisplayName, &userData.IsAdmin)
+	row := u.Authorize(db)
 
-	// log.Printf("%v", userData)
-
-	if strings.ToLower(u.UserName) != userData.UserName || u.Password != userData.Password {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Println("Error logging in")
-		fmt.Fprint(w, "Invalid credentials")
+	if err := row.Scan(
+		&u.LoginID,
+		&u.Password,
+		&u.DisplayName,
+		&u.IsAdmin,
+		&u.RoleID,
+	); err != nil {
+		// log.Printf("Login Error: %#+v\n", err)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
+
+	isvalid := dbutil.IsValidPassword(u.Password, plainPassword)
+
+	if !isvalid {
+		http.Error(w, "Unauthorized Access", http.StatusUnauthorized)
+		return
+	}
+
 	claims := model.ClaimData{
-		userData.DisplayName,
-		userData.IsAdmin,
+		u.DisplayName,
+		u.IsAdmin,
 		jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(time.Hour * time.Duration(1)).Unix(),
 		},
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 
 	tokenString, err := token.SignedString(signKey)

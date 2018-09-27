@@ -6,7 +6,7 @@ import (
 
 //ClaimData custom claim data for jwt
 type ClaimData struct {
-	DisplayName string `json:"displayname"`
-	IsAdmin     bool   `json:"isadmin"`
+	DisplayName string `json:"displayname,omitempty"`
+	IsAdmin     bool   `json:"isadmin,omitempty"`
 	jwt.StandardClaims
 }

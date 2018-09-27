@@ -3,7 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"utilities"
 )
 
 // IUser new user method
@@ -11,21 +11,14 @@ type IUser interface {
 	SaveUser(db *sql.DB) *sql.Row
 }
 
-//UserCredentials to validate user
-type UserCredentials struct {
-	UserName    string `json:"username"`
+// UserInfo new user
+type UserInfo struct {
+	LoginID     string `json:"loginid"`
 	Password    string `json:"password"`
-	DisplayName string `json:"display_name"`
-	IsAdmin     bool   `json:"is_admin"`
-}
-
-// User new user
-type User struct {
-	UserName string `json:"username"`
-	LoginID  string `json:"loginid"`
-	Password string `json:"password"`
-	IsActive bool   `json:"isactive"`
-	RoleID   int    `json:"roleid"`
+	DisplayName string `json:"displayname,omitempty"`
+	IsAdmin     bool   `json:"isadmin,omitempty"`
+	IsActive    bool   `json:"isactive,omitempty"`
+	RoleID      int    `json:"roleid,omitempty"`
 }
 
 //Token token string
@@ -34,13 +27,11 @@ type Token struct {
 }
 
 //Authorize checks user info
-func Authorize(db *sql.DB, user UserCredentials) *sql.Row {
-	tsql := fmt.Sprintf("select usr,pwd,display_name, is_admin from oa.User_M where usr = '%s' and pwd = '%s' and is_active=%d", user.UserName, user.Password, 1)
-
-	return db.QueryRow(tsql)
+func (u *UserInfo) Authorize(db *sql.DB) *sql.Row {
+	return db.QueryRowContext(context.TODO(), "oa.ValidateCredentials", sql.Named("loginid", u.LoginID))
 }
 
 // SaveUser save new user
-func (u *User) SaveUser(db *sql.DB) *sql.Row {
-	return db.QueryRowContext(context.TODO(), "oa.SaveNewUser", sql.Named("username", u.UserName), sql.Named("loginid", u.LoginID), sql.Named("password", u.Password), sql.Named("isactive", u.IsActive), sql.Named("roleid", u.RoleID))
+func (u *UserInfo) SaveUser(db *sql.DB) *sql.Row {
+	return db.QueryRowContext(context.TODO(), "oa.SaveNewUser", sql.Named("displayname", u.DisplayName), sql.Named("loginid", u.LoginID), sql.Named("password", dbutil.HashPassword(u.Password)), sql.Named("isactive", u.IsActive), sql.Named("roleid", u.RoleID))
 }
