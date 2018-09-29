@@ -10,6 +10,8 @@ import (
 type IPermission interface {
 	FetchAllPermissions(db *sql.DB) (*sql.Rows, error)
 	SavePermission(db *sql.DB) *sql.Row
+	FetchUserPermissions(db *sql.DB) (*sql.Rows, error)
+	FetchActionPermission(db *sql.DB) *sql.Row
 }
 
 // PermissionsData all possible permissions
@@ -35,6 +37,37 @@ type MenuPermissions struct {
 	Settings bool   `json:"settings" xml:"settings"`
 }
 
+// UserPermission user permissin info
+type UserPermission struct {
+	EntityPath  string `json:"entitypath"`
+	EntityName  string `json:"entityname"`
+	DisplayName string `json:"displayname"`
+	Entity      string `json:"entity"`
+	BitValue    string `json:"bitvalue"`
+	View        string `json:"view"`
+	Add         string `json:"add"`
+	Edit        string `json:"edit"`
+	Delete      string `json:"delete"`
+	Search      string `json:"search"`
+	Print       string `json:"print"`
+	Mail        string `json:"mail"`
+	Settings    string `json:"settings"`
+}
+
+// ActionsConfig permission settings
+type ActionsConfig struct {
+	LoginID   string `json:"loginid"`
+	EntityRef int    `json:"entityref"`
+	View      bool   `json:"view"`
+	Add       bool   `json:"add"`
+	Edit      bool   `json:"edit"`
+	Delete    bool   `json:"delete"`
+	Search    bool   `json:"search"`
+	Print     bool   `json:"print"`
+	Mail      bool   `json:"mail"`
+	Settings  bool   `json:"settings"`
+}
+
 // FetchAllPermissions all possible permissions
 func (p *MenuPermissions) FetchAllPermissions(db *sql.DB) (*sql.Rows, error) {
 	return db.QueryContext(context.TODO(), "oa.Permission")
@@ -48,4 +81,14 @@ func (p *PermissionsData) SavePermission(db *sql.DB) *sql.Row {
 		return db.QueryRowContext(context.TODO(), "oa.SavePermission", sql.Named("roleName", *rolename), sql.Named("permissionXML", xmlData))
 	}
 	return nil
+}
+
+// FetchUserPermissions fetch user permission & menus
+func (u *UserPermission) FetchUserPermissions(db *sql.DB, loginid string) (*sql.Rows, error) {
+	return db.QueryContext(context.TODO(), "oa.UserPermissions", sql.Named("loginid", loginid))
+}
+
+// FetchActionPermission action config
+func (a *ActionsConfig) FetchActionPermission(db *sql.DB) *sql.Row {
+	return db.QueryRowContext(context.TODO(), "oa.EntityPermission", sql.Named("loginid", a.LoginID), sql.Named("entity_ref", a.EntityRef))
 }

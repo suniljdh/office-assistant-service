@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>App Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900|RobotoDraft:400,100,300,500,700,900'>
+    <!-- <link rel='stylesheet' href='assets/css/font-awesome.min.css'> -->
+
+    <link rel="stylesheet" href="assets/css/style.css">
+  </head>
+
+  <body>
+
+
+    <!-- Form Mixin-->
+    <!-- Input Mixin-->
+    <!-- Button Mixin-->
+
+    <!-- Form Module-->
+    <div class="module form-module">
+      <div class="toggle">
+        <!-- <i class="fa fa-times fa-pencil"></i> -->
+        <svg class="icon-edit">
+          <use href="assets/icons/baseline-border_color-24px.svg"></use>
+        </svg>
+        <div class="tooltip">Click Me</div>
+      </div>
+      <div class="form">
+        <h2>Login to your account</h2>
+        <form action="/login" method="POST">
+          <input type="text" name="txtLoginId" placeholder="Login Id" />
+          <input type="password" name="txtPassword" placeholder="Password" />
+          <button type="submit">Login</button>
+        </form>
+      </div>
+      <div class="form">
+        <h2>Create an account</h2>
+        <form>
+          <input type="text" placeholder="Username" />
+          <input type="password" placeholder="Password" />
+          <input type="email" placeholder="Email Address" />
+          <input type="tel" placeholder="Phone Number" />
+          <button>Register</button>
+        </form>
+      </div>
+      <div class="cta"><a href="#">Forgot your password?</a></div>
+    </div>
+    <script src='assets/js/jquery2.1.3.min.js'></script>
+
+    <script src="assets/js/index.js"></script>
+  </body>
+
+</html>

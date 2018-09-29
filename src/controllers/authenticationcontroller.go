@@ -3,12 +3,12 @@ package controllers
 import (
 	"crypto/rsa"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	model "models"
 	"net/http"
+	"text/template"
 	"time"
 	"utilities"
 
@@ -27,8 +27,8 @@ var (
 )
 
 var (
-	db *sql.DB
-	// tmpl *template.Template
+	db   *sql.DB
+	tmpl *template.Template
 )
 
 func fatal(err error) {
@@ -56,17 +56,21 @@ func INITKey() {
 
 // LoginHandler userlogin
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	// tmpl.Execute(w, nil)
 
 	db, err := dbutil.ConnectDB()
 	fatal(err)
 
 	var u model.UserInfo
 
-	if err = json.NewDecoder(r.Body).Decode(&u); err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
+	// if err = json.NewDecoder(r.Body).Decode(&u); err != nil {
+	// 	http.Error(w, err.Error(), http.StatusUnauthorized)
+	// 	return
+	// }
+
+	u.LoginID = r.FormValue("txtLoginId")
+	u.Password = r.FormValue("txtPassword")
+
+	// log.Printf("User Info : %#+v\n", u)
 
 	defer db.Close()
 
@@ -114,8 +118,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		fatal(err)
 	}
 
-	tokenData := model.Token{Token: tokenString}
-	dbutil.JSONResult(&tokenData, w)
+	expire := time.Now().Add(time.Minute * time.Duration(5))
+	cookie := http.Cookie{
+		Name:    "accesstoken",
+		Value:   tokenString,
+		Expires: expire,
+	}
+
+	http.SetCookie(w, &cookie)
+
+	// tokenData := model.Token{Token: tokenString}
+	// dbutil.JSONResult(&tokenData, w)
 }
 
 // ValidateTokenMiddleware token valid or not
@@ -136,4 +149,11 @@ func ValidateTokenMiddleware(w http.ResponseWriter, r *http.Request, next http.H
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
+}
+
+// IndexHandler home page handler
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl = template.Must(template.ParseGlob("views/*.html"))
+
+	tmpl.ExecuteTemplate(w, "index.html", nil)
 }

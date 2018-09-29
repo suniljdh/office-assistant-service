@@ -13,15 +13,22 @@ import (
 func main() {
 	controllers.INITKey()
 
-	// tmpl = template.Must(template.ParseGlob("views/*.gohtml"))
 	mux := http.NewServeMux()
-
-	// http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("views/css/"))))
-
+	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("views/public"))))
 	//Public Endpoint
+	mux.HandleFunc("/", controllers.IndexHandler)
+
 	mux.HandleFunc("/login", controllers.LoginHandler)
 
 	//Protected Endpoints
+	mux.Handle("/entitypermissions", negroni.New(
+		negroni.HandlerFunc(controllers.ValidateTokenMiddleware),
+		negroni.WrapFunc(controllers.FetchEntityPermissionsHandler)))
+
+	mux.Handle("/userpermissions", negroni.New(
+		negroni.HandlerFunc(controllers.ValidateTokenMiddleware),
+		negroni.WrapFunc(controllers.FetchUserPermissionsHandler)))
+
 	mux.Handle("/fetchclient", negroni.New(
 		negroni.HandlerFunc(controllers.ValidateTokenMiddleware),
 		negroni.WrapFunc(controllers.FetchClientHandler)))

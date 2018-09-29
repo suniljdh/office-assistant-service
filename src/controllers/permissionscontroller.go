@@ -126,3 +126,65 @@ func SaveUserHandler(w http.ResponseWriter, r *http.Request) {
 		dbutil.JSONResult(resp, w)
 	}
 }
+
+// FetchUserPermissionsHandler user & permissions
+func FetchUserPermissionsHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := dbutil.ConnectDB()
+	defer db.Close()
+	fatal(err)
+	loginid := r.URL.Query()["loginid"][0]
+	var p model.UserPermission
+	// log.Printf("LoginId : %#v\n", loginid)
+	rows, err := p.FetchUserPermissions(db, string(loginid))
+	result := make([]model.UserPermission, 0)
+
+	for rows.Next() {
+		err := rows.Scan(
+			&p.EntityPath,
+			&p.EntityName,
+			&p.DisplayName,
+			&p.Entity,
+			&p.BitValue,
+			&p.View,
+			&p.Add,
+			&p.Edit,
+			&p.Delete,
+			&p.Search,
+			&p.Print,
+			&p.Mail,
+			&p.Settings,
+		)
+		fatal(err)
+		result = append(result, p)
+	}
+	dbutil.JSONResult(result, w)
+}
+
+// FetchEntityPermissionsHandler entity & permissions
+func FetchEntityPermissionsHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := dbutil.ConnectDB()
+	defer db.Close()
+	fatal(err)
+
+	var a model.ActionsConfig
+	json.NewDecoder(r.Body).Decode(&a)
+	// log.Printf("LoginId : %#v\n", loginid)
+
+	row := a.FetchActionPermission(db)
+
+	err = row.Scan(
+		&a.LoginID,
+		&a.EntityRef,
+		&a.View,
+		&a.Add,
+		&a.Edit,
+		&a.Delete,
+		&a.Search,
+		&a.Print,
+		&a.Mail,
+		&a.Settings,
+	)
+	fatal(err)
+
+	dbutil.JSONResult(a, w)
+}
